@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>fishing break</title>
+    
+    <link rel="icon" type="image/svg+xml" href="favicon.png">
+    <style>
+        :root {
+            --dk: #0a3323;
+            --moss: #839958;
+            --cream: #f7f4d5;
+            --rose: #d3968c;
+            --teal: #105666;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--dk);
+            color: var(--cream);
+            font-family: "Courier New", monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            padding: 16px;
+        }
+
+        h1 {
+            margin: 0;
+            font-weight: normal;
+            letter-spacing: 6px;
+            font-size: 1.8rem;
+            color: var(--cream);
+        }
+
+        canvas {
+            width: 100%;
+            max-width: 520px;
+            height: auto;
+            background: var(--teal);
+            border: 3px solid var(--moss);
+            border-radius: 6px;
+            cursor: pointer;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .home {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            padding: 6px 12px;
+            background: var(--moss);
+            color: var(--dk);
+            text-decoration: none;
+            border: 2px solid var(--cream);
+            border-radius: 4px;
+            font-size: .85rem;
+        }
+
+        .home:hover {
+            background: var(--rose);
+        }
+
+        p {
+            margin: 0;
+            font-size: .85rem;
+            color: var(--rose);
+            text-align: center;
+            max-width: 520px;
+        }
+    </style>
+</head>
+
+<body>
+    <a class="home" href="index.html">go home</a>
+    <h1>fishing break</h1>
+    <canvas id="c" width="520" height="440"></canvas>
+    <p>click to cast. when the fish bites, click again. then hold the mouse button to lift the green bar, release to let
+        it fall. keep the fish inside the bar until the right meter fills. (space bar works too)</p>
+
+    <script>
+        const cv = document.getElementById('c'),
+            ctx = cv.getContext('2d');
+        const W = cv.width,
+            H = cv.height;
+        const C = {
+            dk: '#0a3323',
+            moss: '#839958',
+            cream: '#f7f4d5',
+            rose: '#d3968c',
+            teal: '#105666'
+        };
+
+        // fish types: spd = how fast it moves, dart = chance of a long sudden dash, len = size range in cm
+        const FISH = [{
+                n: 'perch',
+                col: C.rose,
+                spd: 1.9,
+                dart: .12,
+                len: [14, 28]
+            },
+            {
+                n: 'carp',
+                col: C.moss,
+                spd: 2.3,
+                dart: .18,
+                len: [40, 70]
+            },
+            {
+                n: 'trout',
+                col: C.cream,
+                spd: 2.7,
+                dart: .24,
+                len: [30, 55]
+            },
+            {
+                n: 'pike',
+                col: C.moss,
+                spd: 3.1,
+                dart: .30,
+                len: [60, 100]
+            },
+            {
+                n: 'golden koi',
+                col: C.rose,
+                spd: 3.5,
+                dart: .36,
+                len: [45, 80]
+            }
+        ];
+
+        // minigame geometry
+        const TX = 190,
+            TY = 40,
+            TW = 64,
+            TH = 360,
+            BAR_H = 105;
+        const PX = 280,
+            PW = 20; // progress bar
+
+        let state = 'idle'; // idle | waiting | bite | play
+        let t = 0,
+            wait = 0,
+            msg = 'click to cast',
+            held = false;
+        let bar = {
+                y: 0,
+                v: 0
+            },
+            fish = {
+                y: 0,
+                ty: 0,
+                timer: 0,
+                sp: 3,
+                type: FISH[0]
+            },
+            prog = 0;
+        let caught = 0,
+            last = '';
+
+        const rnd = (a, b) => a + Math.random() * (b - a);
+        const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+        function press() {
+            if (state === 'idle') {
+                state = 'waiting';
+                t = 0;
+                wait = rnd(2, 5);
+                msg = 'waiting for a bite...';
+            } else if (state === 'waiting') {
+                state = 'idle';
+                msg = 'too early! click to cast again';
+            } else if (state === 'bite') {
+                startPlay();
+            }
+        }
+
+        function startPlay() {
+            // bigger fish are rarer and harder
+            const r = Math.random();
+            const i = r < .35 ? 0 : r < .62 ? 1 : r < .82 ? 2 : r < .94 ? 3 : 4;
+            fish.type = FISH[i];
+            fish.y = TH - 20;
+            fish.ty = fish.y;
+            fish.timer = 0.5;
+            fish.sp = fish.type.spd;
+            bar.y = TH - BAR_H;
+            bar.v = 0;
+            prog = 0.3;
+            state = 'play';
+        }
+
+        function pickTarget() {
+            const f = fish.type,
+                r = Math.random();
+            if (r < f.dart) { // sudden dash anywhere in the track
+                fish.ty = clamp(fish.y + rnd(-150, 150), 16, TH - 16);
+                fish.timer = rnd(.5, 1);
+                fish.sp = f.spd * 2.1;
+            } else if (r < f.dart + .3) { // rests low, no clicking needed
+                fish.ty = TH - rnd(18, 60);
+                fish.timer = rnd(1, 2.2);
+                fish.sp = f.spd * .8;
+            } else { // small wander
+                fish.ty = clamp(fish.y + rnd(-70, 70), 16, TH - 16);
+                fish.timer = rnd(.6, 1.4);
+                fish.sp = f.spd;
+            }
+        }
+
+        function update(dt) {
+            t += dt;
+            if (state === 'waiting' && t >= wait) {
+                state = 'bite';
+                t = 0;
+            } else if (state === 'bite' && t > 1.5) {
+                state = 'idle';
+                msg = 'it got away. click to cast again';
+            } else if (state === 'play') {
+                // bar physics: holding pushes up, releasing lets it fall, small bounce at the bottom
+                bar.v += (held ? -1050 : 725) * dt;
+                bar.v = clamp(bar.v, -360, 380);
+                bar.y += bar.v * dt;
+                if (bar.y < 0) {
+                    bar.y = 0;
+                    bar.v = 0;
+                }
+                if (bar.y > TH - BAR_H) {
+                    bar.y = TH - BAR_H;
+                    bar.v = -bar.v * .35;
+                }
+
+                // fish movement
+                fish.timer -= dt;
+                if (fish.timer <= 0) pickTarget();
+                fish.y += (fish.ty - fish.y) * Math.min(1, dt * fish.sp);
+
+                // progress
+                const inside = fish.y > bar.y && fish.y < bar.y + BAR_H;
+                prog += (inside ? .25 : -.1) * dt;
+                if (prog >= 1) {
+                    const len = Math.round(rnd(fish.type.len[0], fish.type.len[1]));
+                    caught++;
+                    last = fish.type.n + ' (' + len + ' cm)';
+                    msg = 'you caught a ' + last + '! click to cast again';
+                    state = 'idle';
+                } else if (prog <= 0) {
+                    msg = 'the ' + fish.type.n + ' escaped. click to cast again';
+                    state = 'idle';
+                }
+            }
+        }
+
+        function text(s, x, y, size, col, align) {
+            ctx.font = size + 'px "Courier New", monospace';
+            ctx.fillStyle = col;
+            ctx.textAlign = align || 'center';
+            ctx.fillText(s, x, y);
+        }
+
+        function drawScene(time) {
+            ctx.fillStyle = C.cream;
+            ctx.fillRect(0, 0, W, 190); // sky
+            ctx.fillStyle = C.rose;
+            ctx.beginPath();
+            ctx.arc(420, 80, 34, 0, 7);
+            ctx.fill(); // sun
+            ctx.fillStyle = C.moss;
+            ctx.fillRect(0, 160, W, 30); // far bank
+            ctx.fillStyle = C.teal;
+            ctx.fillRect(0, 190, W, H - 190); // water
+            ctx.strokeStyle = 'rgba(247,244,213,.18)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 7; i++) { // ripples
+                const y = 215 + i * 32,
+                    o = Math.sin(time / 900 + i) * 10;
+                ctx.beginPath();
+                ctx.moveTo(30 + o + i * 20, y);
+                ctx.lineTo(120 + o + i * 20, y);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(300 - o, y + 14);
+                ctx.lineTo(400 - o, y + 14);
+                ctx.stroke();
+            }
+            ctx.fillStyle = C.moss; // lily pads
+            [
+                [90, 300],
+                [430, 360],
+                [150, 400]
+            ].forEach(p => {
+                ctx.beginPath();
+                ctx.ellipse(p[0], p[1], 26, 9, 0, 0, 7);
+                ctx.fill();
+            });
+            ctx.fillStyle = C.dk;
+            ctx.fillRect(0, 150, 70, 290); // dock side
+            ctx.strokeStyle = C.dk;
+            ctx.lineWidth = 4; // rod
+            ctx.beginPath();
+            ctx.moveTo(50, 190);
+            ctx.lineTo(210, 70);
+            ctx.stroke();
+
+            // line + bobber
+            let bx = 330,
+                by = 260;
+            if (state === 'waiting') by += Math.sin(time / 400) * 3;
+            if (state === 'bite') by += 14 + Math.sin(time / 40) * 4;
+            if (state === 'idle') {
+                bx = 230;
+                by = 150;
+            }
+            ctx.strokeStyle = C.cream;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(210, 70);
+            ctx.lineTo(bx, by);
+            ctx.stroke();
+            ctx.fillStyle = C.rose;
+            ctx.beginPath();
+            ctx.arc(bx, by, 7, Math.PI, 0);
+            ctx.fill();
+            ctx.fillStyle = C.cream;
+            ctx.beginPath();
+            ctx.arc(bx, by, 7, 0, Math.PI);
+            ctx.fill();
+            if (state === 'bite') {
+                ctx.strokeStyle = C.cream;
+                ctx.beginPath();
+                ctx.ellipse(bx, by + 4, 22, 7, 0, 0, 7);
+                ctx.stroke();
+                text('!', bx, by - 26, 34, C.dk);
+            }
+        }
+
+        function drawFish(x, y, col) {
+            ctx.fillStyle = col;
+            ctx.beginPath();
+            ctx.ellipse(x, y, 13, 7, 0, 0, 7);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(x - 10, y);
+            ctx.lineTo(x - 22, y - 7);
+            ctx.lineTo(x - 22, y + 7);
+            ctx.fill();
+            ctx.fillStyle = C.dk;
+            ctx.beginPath();
+            ctx.arc(x + 6, y - 2, 1.8, 0, 7);
+            ctx.fill();
+        }
+
+        function drawPlay() {
+            ctx.fillStyle = 'rgba(10,51,35,.82)';
+            ctx.fillRect(0, 0, W, H);
+            // track
+            ctx.fillStyle = C.teal;
+            ctx.fillRect(TX, TY, TW, TH);
+            ctx.strokeStyle = C.cream;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(TX, TY, TW, TH);
+            // green bar
+            ctx.fillStyle = 'rgba(131,153,88,.75)';
+            ctx.fillRect(TX + 3, TY + bar.y, TW - 6, BAR_H);
+            ctx.strokeStyle = C.moss;
+            ctx.lineWidth = 3;
+            ctx.strokeRect(TX + 3, TY + bar.y, TW - 6, BAR_H);
+            // fish
+            drawFish(TX + TW / 2 + 6, TY + fish.y, fish.type.col);
+            // progress
+            ctx.fillStyle = C.dk;
+            ctx.fillRect(PX, TY, PW, TH);
+            ctx.fillStyle = prog > .33 ? C.moss : C.rose;
+            ctx.fillRect(PX + 2, TY + TH - prog * TH, PW - 4, prog * TH);
+            ctx.strokeStyle = C.cream;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(PX, TY, PW, TH);
+            text(held ? 'holding' : 'released', W / 2, 24, 14, C.rose);
+        }
+
+        function draw(time) {
+            drawScene(time);
+            if (state === 'play') drawPlay();
+            else {
+                const m = state === 'bite' ? 'bite! click now!' : msg;
+                ctx.fillStyle = 'rgba(10,51,35,.78)';
+                ctx.fillRect(0, H - 64, W, 64);
+                text(m, W / 2, H - 38, 16, C.cream);
+                text('caught: ' + caught + (last ? '   last: ' + last : ''), W / 2, H - 14, 13, C.rose);
+            }
+        }
+
+        let prev = performance.now();
+
+        function loop(now) {
+            const dt = Math.min(.05, (now - prev) / 1000);
+            prev = now;
+            update(dt);
+            draw(now);
+            requestAnimationFrame(loop);
+        }
+        requestAnimationFrame(loop);
+
+        // input
+        cv.addEventListener('pointerdown', e => {
+            e.preventDefault();
+            held = true;
+            press();
+        });
+        window.addEventListener('pointerup', () => held = false);
+        window.addEventListener('pointercancel', () => held = false);
+        cv.addEventListener('contextmenu', e => e.preventDefault());
+        window.addEventListener('keydown', e => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (!held) {
+                    held = true;
+                    press();
+                }
+            }
+        });
+        window.addEventListener('keyup', e => {
+            if (e.code === 'Space') held = false;
+        });
+    </script>
+</body>
+
+</html>

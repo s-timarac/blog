@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>70khz - blog</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Dots&family=Lexend:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link href="node_modules/@flaticon/flaticon-uicons/css/regular/rounded.css" rel="stylesheet">
+    <style>
+        :root {
+            --pink: #D3968C;
+            --deep: #105666;
+            --dark: #0A3323;
+            --soft: #839958;
+            --txt: #0A3323;
+            --white: #F7F4D5;
+            box-sizing: border-box;
+            padding-top: env(safe-area-inset-top, 0px);
+            padding-bottom: env(safe-area-inset-bottom, 0px)
+        }
+
+        @media(prefers-color-scheme:dark) {
+            :root:not([data-theme="light"]) {
+                --soft: #105666;
+                --txt: #F7F4D5;
+                --white: #0A3323;
+                --deep: #D3968C
+            }
+        }
+
+        :root[data-theme="dark"] {
+            --soft: #105666;
+            --txt: #F7F4D5;
+            --white: #0A3323;
+            --deep: #D3968C
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 20px
+        }
+
+        body {
+            margin: 0;
+            padding: 16px;
+            background: var(--dark);
+            color: var(--txt);
+            font: 300 .95rem/1.65 Lexend, sans-serif
+        }
+
+        .bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: var(--dark) url('background.gif') center/cover no-repeat
+        }
+
+        @media(prefers-reduced-motion:reduce) {
+            .bg {
+                background-image: none
+            }
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Zen Dots', sans-serif;
+            font-weight: 400;
+            color: var(--deep);
+            margin: 0 0 .3em;
+            letter-spacing: .02em;
+            line-height: 1.15
+        }
+
+        .frame {
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 14px;
+            min-height: 100vh;
+            background: var(--white);
+            border-radius: 36px
+        }
+
+        @media(min-width:900px) {
+            .frame {
+                margin: 0 auto 0 4vw
+            }
+        }
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: 36px;
+            min-height: 440px;
+            background: url('hero.jpg') center/cover no-repeat, linear-gradient(135deg, #D3968C, #105666 60%, #0A3323)
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 42%;
+            height: 150px;
+            background: var(--white);
+            border-top-right-radius: 36px
+        }
+
+        nav {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            z-index: 3;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            max-width: calc(100% - 28px)
+        }
+
+        .logo {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--white);
+            display: grid;
+            place-items: center
+        }
+
+        .lotus {
+            width: 42px;
+            height: 31px;
+            cursor: pointer;
+            outline: none;
+            -webkit-tap-highlight-color: transparent
+        }
+
+        .lotus .petal {
+            fill: #ecc3bc;
+            stroke: #D3968C;
+            transform-origin: 100px 130px;
+            transform: rotate(var(--r)) scale(.2);
+            opacity: .3;
+            transition: transform 1.6s cubic-bezier(.2, .9, .3, 1.1) var(--d), opacity 1.6s var(--d)
+        }
+
+        .lotus.open .petal {
+            transform: rotate(var(--r)) scale(1);
+            opacity: 1
+        }
+
+        .links {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            background: var(--white);
+            border-radius: 999px;
+            padding: 6px
+        }
+
+        .links a {
+            font: 400 .9rem Lexend;
+            color: var(--deep);
+            text-decoration: none;
+            padding: 5px 16px;
+            border-radius: 999px
+        }
+
+        .links a:hover,
+        .links a.on {
+            background: var(--pink);
+            color: var(--dark)
+        }
+
+        .tag {
+            position: absolute;
+            top: 20px;
+            right: 26px;
+            z-index: 3;
+            margin: 0;
+            color: #fff;
+            text-align: right;
+            font-size: .8rem;
+            line-height: 1.3;
+            text-shadow: 0 1px 8px #0006
+        }
+
+        .titlebox {
+            position: absolute;
+            right: 26px;
+            bottom: 18px;
+            z-index: 2;
+            text-align: right
+        }
+
+        .sub {
+            margin: 0;
+            color: #fff;
+            font: 300 clamp(1rem, 2.6vw, 1.5rem) Lexend;
+            text-shadow: 0 1px 10px #0005
+        }
+
+        .title {
+            font-size: clamp(3rem, 11vw, 5.6rem);
+            color: #fff;
+            margin: 0;
+            text-shadow: 0 2px 14px #0004
+        }
+
+        .intro {
+            position: relative;
+            z-index: 2;
+            width: 40%;
+            margin-top: -150px;
+            padding: 0 6px
+        }
+
+        .intro .sec {
+            margin: 0 0 6px
+        }
+
+        .intro p {
+            font-size: .85rem;
+            margin: 0 0 12px
+        }
+
+        .pill {
+            display: inline-block;
+            font: 400 .9rem Lexend;
+            background: var(--pink);
+            color: var(--dark);
+            border: 0;
+            border-radius: 999px;
+            padding: 10px 34px;
+            text-decoration: none;
+            cursor: pointer
+        }
+
+        .pill:hover {
+            filter: brightness(1.1)
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 22px;
+            margin: 44px 0 10px
+        }
+
+        .step {
+            position: relative;
+            border-radius: 28px;
+            background: var(--soft);
+            padding: 36px 22px 22px
+        }
+
+        .num {
+            position: absolute;
+            top: -22px;
+            left: 22px;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--pink);
+            color: var(--dark);
+            display: grid;
+            place-items: center;
+            
+            font: 1.2rem 'Zen Dots'
+        }
+
+        .step h3 {
+            font-size: 1.1rem
+        }
+
+        .step ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            font-size: .88rem
+        }
+
+        .step li::before {
+            content: "- ";
+            color: var(--deep)
+        }
+
+        .step a {
+            color: inherit
+        }
+
+        h2.sec {
+            font-size: clamp(1.4rem, 4vw, 1.9rem);
+            margin: 44px 0 12px
+        }
+
+        .card {
+            background: var(--soft);
+            border-radius: 28px;
+            padding: 20px 26px;
+            margin: 14px 0
+        }
+
+        .post {
+            cursor: pointer
+        }
+
+        .post h3 {
+            font-size: 1.2rem;
+            display: flex;
+            justify-content: space-between
+        }
+
+        .post small {
+            opacity: .7
+        }
+
+        .post .body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height .5s ease
+        }
+
+        .post.open .body {
+            max-height: 400px
+        }
+
+        .arrow {
+            font-size: .9rem;
+            color: var(--deep);
+            transition: transform .3s
+        }
+
+        .post.open .arrow {
+            transform: rotate(180deg)
+        }
+
+        .reacts {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px
+        }
+
+        .react {
+            font: inherit;
+            font-size: .85rem;
+            background: var(--white);
+            color: var(--txt);
+            border: 1.5px solid var(--pink);
+            border-radius: 999px;
+            padding: 4px 12px;
+            cursor: pointer
+        }
+
+        .react.on {
+            background: var(--pink);
+            color: var(--dark)
+        }
+
+        .react b {
+            font-weight: 600;
+            margin-left: 4px
+        }
+
+        .slider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 14px
+        }
+
+        .slide {
+            margin: 0;
+            width: min(320px, 100%)
+        }
+
+        .slide img {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            border-radius: 24px;
+            /* background: var(--pink); */
+            display: block
+        }
+
+        .slide figcaption {
+            font: 1rem 'Zen Dots';
+            color: var(--deep);
+            margin-top: 8px
+        }
+
+        .sbtn {
+            flex: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 0;
+            background: var(--pink);
+            color: var(--dark);
+            font-size: 1.6rem;
+            line-height: 1;
+            cursor: pointer
+        }
+
+        .sbtn:hover {
+            filter: brightness(1.1)
+        }
+
+        .duo {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px
+        }
+
+        .center {
+            text-align: center
+        }
+
+        #aff {
+            font: 1.2rem/1.4 'Zen Dots';
+            color: var(--deep);
+            min-height: 4em
+        }
+
+        input,
+        textarea {
+            font: inherit;
+            width: 100%;
+            border: 1.5px solid var(--pink);
+            border-radius: 16px;
+            padding: 9px 14px;
+            background: var(--white);
+            color: var(--txt);
+            margin: 4px 0
+        }
+
+        .note {
+            border-bottom: 1px solid var(--pink);
+            padding: 8px 0
+        }
+
+        footer {
+            text-align: center;
+            font-size: .85rem;
+            padding: 34px 0 30px;
+            opacity: .8
+        }
+
+        #kofi {
+            display: inline-block
+        }
+
+        #kofi img {
+            transform-origin: center;
+            transition: filter .25s ease
+        }
+
+        #kofi:hover img {
+            animation: kofi-float .7s ease-in-out infinite alternate;
+            filter: drop-shadow(0 5px 8px #D3968C)
+        }
+
+        @keyframes kofi-float {
+            from {
+                transform: translateY(0) rotate(-2deg) scale(1)
+            }
+
+            to {
+                transform: translateY(-8px) rotate(2deg) scale(1.08)
+            }
+        }
+
+        .counter {
+            font-family: monospace;
+            letter-spacing: 2px
+        }
+
+        :focus-visible {
+            outline: 3px solid var(--pink);
+            outline-offset: 2px
+        }
+
+        .duo {
+            align-items: stretch
+        }
+
+        .duo>div {
+            display: flex;
+            flex-direction: column
+        }
+
+        .duo .card {
+            flex: 1;
+            margin-bottom: 0;
+            padding: 16px 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center
+        }
+
+        .duo .slider {
+            gap: 8px;
+            margin-bottom: 10px
+        }
+
+        .duo .slide {
+            width: min(150px, 100%)
+        }
+
+        .duo .slide img {
+            border-radius: 18px
+        }
+
+        .duo .slide figcaption {
+            font-size: .85rem
+        }
+
+        .duo .sbtn {
+            width: 34px;
+            height: 34px;
+            font-size: 1.3rem
+        }
+
+        .duo .pill {
+            padding: 8px 24px;
+            font-size: .85rem
+        }
+
+        .duo input {
+            padding: 6px 12px;
+            font-size: .85rem
+        }
+
+        .duo #aff {
+            font-size: 1.4rem;
+            min-height: 3em
+        }
+
+        @media(max-width:800px) {
+
+            .steps,
+            .duo {
+                grid-template-columns: 1fr
+            }
+
+            .tag,
+            .hero::after {
+                display: none
+            }
+
+            .hero {
+                min-height: 360px
+            }
+
+            .intro {
+                width: 100%;
+                margin-top: 18px
+            }
+        }
+
+        @media(prefers-reduced-motion:reduce) {
+            * {
+                animation: none !important;
+                transition: none !important;
+                scroll-behavior: auto !important
+            }
+        }
+
+        
+    </style>
+</head>
+
+<body>
+    <div class="bg" aria-hidden="true"></div>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <defs>
+            <symbol id="lf" viewBox="0 0 100 220">
+                <path d="M50 4C90 50 96 130 50 216C4 130 10 50 50 4Z" />
+                <path d="M50 14V206" stroke="#F7F4D5" stroke-opacity=".6" stroke-width="2" fill="none" />
+            </symbol>
+            <symbol id="fl" viewBox="0 0 200 200">
+                <g fill="#D3968C" stroke="#105666" stroke-width="2">
+                    <ellipse cx="100" cy="45" rx="42" ry="46" />
+                    <ellipse cx="152" cy="82" rx="42" ry="46" transform="rotate(72 152 82)" />
+                    <ellipse cx="132" cy="146" rx="42" ry="46" transform="rotate(144 132 146)" />
+                    <ellipse cx="68" cy="146" rx="42" ry="46" transform="rotate(216 68 146)" />
+                    <ellipse cx="48" cy="82" rx="42" ry="46" transform="rotate(288 48 82)" />
+                </g>
+                <circle cx="100" cy="100" r="16" fill="#F7F4D5" stroke="#105666" stroke-width="2" />
+            </symbol>
+        </defs>
+    </svg>
+    <div class="frame">
+        <header class="hero" id="top">
+            <nav id="nav" aria-label="Main"><span class="logo"><svg class="lotus" id="lotus" viewBox="0 0 200 150"
+                        role="button" aria-label="Bloom the lotus" tabindex="0">
+                        <g fill="#839958" stroke="#105666" stroke-width="1.5">
+                            <path class="petal" style="--r:-75deg;--d:0s"
+                                d="M100 130 C70 100 70 60 100 30 C130 60 130 100 100 130Z" />
+                            <path class="petal" style="--r:75deg;--d:0s"
+                                d="M100 130 C70 100 70 60 100 30 C130 60 130 100 100 130Z" />
+                        </g>
+                        <g fill="#D3968C" stroke="#105666" stroke-width="1.5">
+                            <path class="petal" style="--r:-45deg;--d:.2s"
+                                d="M100 130 C70 100 70 60 100 22 C130 60 130 100 100 130Z" />
+                            <path class="petal" style="--r:45deg;--d:.2s"
+                                d="M100 130 C70 100 70 60 100 22 C130 60 130 100 100 130Z" />
+                            <path class="petal" style="--r:-20deg;--d:.4s"
+                                d="M100 130 C68 100 68 55 100 15 C132 55 132 100 100 130Z" />
+                            <path class="petal" style="--r:20deg;--d:.4s"
+                                d="M100 130 C68 100 68 55 100 15 C132 55 132 100 100 130Z" />
+                            <path class="petal" style="--r:0deg;--d:.6s"
+                                d="M100 132 C72 100 72 50 100 8 C128 50 128 100 100 132Z" />
+                        </g>
+                    </svg></span>
+                <div class="links"><a href="index.html">home</a><a class="on" href="blog.html">blog</a><a
+                        href="#coffee">coffee</a><a href="#guest">guestbook</a></div>
+            </nav>
+            
+            <div class="titlebox">
+                <p class="sub">slow mornings, loud thoughts</p>
+                <h1 class="title">70khz</h1>
+            </div>
+        </header>
+        <div class="intro">
+            <h2 class="sec">welcome</h2>
+            <p>A quiet corner of the web for my thoughts</p><a class="pill" href="blog.html">read the blog</a>
+        </div>
+
+        <h2 class="sec" id="blog">Blog</h2>
+        <div class="card post open">
+            <h3>Whatever<span class="arrow">&#9662;</span></h3><small>02 Oct 2026</small>
+            <div class="body">
+                <p>Finishing touches for my website. Debating whether to manually make the neighbor application form or use formspree. <br>
+                    
+                </p>
+            </div>
+            <div class="reacts" data-post="new-beginnings"></div>
+        </div>
+        <!--<div class="card post">
+            <h3>Why I tune to 70 kHz <span class="arrow">&#9662;</span></h3><small>21 Sep 2026</small>
+            <div class="body">
+                <p>Some frequencies you can't hear but still feel. This site is that: a quiet signal, just above the
+                    noise. Welcome to the broadcast.</p>
+            </div>
+            <div class="reacts" data-post="why-70khz"></div>
+        </div>
+        <div class="card post">
+            <h3>Crystal shelf update <span class="arrow">&#9662;</span></h3><small>14 Sep 2026 &middot; mood:
+                sparkly</small>
+            <div class="body">
+                <p>Rose quartz by the bed, amethyst by the desk, and a very ambitious clear quartz on the windowsill
+                    charging under the full moon. Do they work? Unclear. Do they look amazing? Absolutely.</p>
+            </div>
+            <div class="reacts" data-post="crystal-shelf"></div>
+        </div>
+        <div class="card post">
+            <h3>Playlist <span class="arrow">&#9662;</span></h3><small>7 Sep 2026</small>
+            <div class="body">
+                <p>Rain sounds, soft synths, one very dramatic flute track. Make your own and put it on repeat. Best
+                    consumed lying flat on the floor with your eyes closed.</p>
+            </div>
+            <div class="reacts" data-post="playlist"></div>
+        </div> !-->
+
+        <div class="duo">
+            
+        </div>
+
+        <h2 class="sec" id="guest">Sign my guestbook</h2>
+        <div class="card">
+            <p>Leave a note. Messages show up for everyone who visits.</p>
+            <input id="gn" placeholder="your name" maxlength="24" aria-label="Your name">
+            <textarea id="gm" rows="2" placeholder="leave some good energy" maxlength="140"
+                aria-label="Your message"></textarea>
+            <button class="pill" id="gs">Send!</button>
+            <p id="gerr" role="status" style="font-size:.9rem;min-height:1.4em;margin:6px 0 0"></p>
+            <div id="gl"></div>
+        </div>
+
+        <footer>your visits here: <span class="counter" id="cnt">000001</span><br>best viewed with an open heart
+            &middot; made on neocities &middot; &copy; 70khz<br> <br>
+            <a href='https://ko-fi.com/V4V2281X9N' id='kofi' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi3.png?v=6' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
+        </footer>
+    </div>
+
+    <script>
+        const $ = s => document.querySelector(s),
+            $$ = s => [...document.querySelectorAll(s)];
+        const store = {
+            get(k, d) {
+                try {
+                    return JSON.parse(localStorage.getItem(k)) ?? d
+                } catch (e) {
+                    return d
+                }
+            },
+            set(k, v) {
+                try {
+                    localStorage.setItem(k, JSON.stringify(v))
+                } catch (e) {}
+            }
+        };
+        const lotus = $('#lotus');
+        const bloom = () => lotus.classList.toggle('open');
+        lotus.onclick = bloom;
+        lotus.onkeydown = e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                bloom()
+            }
+        };
+        setTimeout(() => lotus.classList.add('open'), 500);
+
+        $$('.post').forEach(p => p.addEventListener('click', e => {
+            if (e.target.closest('.reacts')) return;
+            p.classList.toggle('open')}));
+
+        const A = ["You are exactly where you need to be.", "Slow down.",
+            "Your energy is a gift, spend it gently.", "Today, choose peace over being perfect.",
+            "Inhale courage, exhale doubt.", "Stop stressing!",
+            "You are allowed to take up space and rest.",
+            "Drink water.", "In the end, all you have is yourself.",
+            "Everything you need is already within you."
+        ];
+        let last = -1;
+        $('#pull').onclick = () => {
+            let i;
+            do {
+                i = Math.floor(Math.random() * A.length)
+            } while (i === last);
+            last = i;
+            const el = $('#aff');
+            el.style.transition = 'none';
+            el.style.opacity = 0;
+            el.textContent = A[i];
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                el.style.transition = 'opacity 1s';
+                el.style.opacity = 1
+            }));
+        };
+        const SB_URL = 'https://cfjkfrabsllolhpyfdyf.supabase.co';
+        const SB_KEY =
+            'sb_publishable_sLWtGG0ylM3Lay-BJH7CnQ_wwduSbCT'; // Supabase > Project Settings > API Keys (publishable / anon key only, never the secret or service_role key)
+        const esc = s => s.replace(/[&<>"]/g, c => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;'
+        } [c]));
+        const hdr = () => {
+            const h = {
+                apikey: SB_KEY,
+                'Content-Type': 'application/json'
+            };
+            if (SB_KEY.startsWith('eyJ')) h.Authorization = 'Bearer ' + SB_KEY;
+            return h
+        };
+        const live = !SB_KEY.startsWith('PASTE');
+        const seed = [{
+            name: '70khz',
+            message: 'website is still under construction, but the guestbook is open!'
+        }];
+
+        function render(rows) {
+            $('#gl').innerHTML = rows.map(x =>
+                `<div class="note"><b>${esc(x.name)}</b> &middot; ${esc(x.message)}</div>`).join('')
+        }
+        async function drawG() {
+            if (!live) {
+                render(store.get('gb', seed));
+                return
+            }
+            try {
+                const r = await fetch(SB_URL +
+                    '/rest/v1/guestbook?select=name,message&order=created_at.desc&limit=30', {
+                        headers: hdr()
+                    });
+                if (!r.ok) throw new Error(r.status);
+                const rows = await r.json();
+                render(rows.length ? rows : seed);
+                $('#gerr').textContent = '';
+            } catch (e) {
+                render(seed);
+                $('#gerr').textContent = 'could not load messages right now. try again later.'
+            }
+        }
+        $('#gs').onclick = async () => {
+            const name = $('#gn').value.trim() || 'anonymous',
+                message = $('#gm').value.trim();
+            if (!message) return;
+            const err = $('#gerr');
+            if (!live) {
+                const l = store.get('gb', seed);
+                l.unshift({
+                    name,
+                    message
+                });
+                store.set('gb', l.slice(0, 30));
+                $('#gm').value = '';
+                drawG();
+                return
+            }
+            const wait = 30000 - (Date.now() - store.get('gbLast', 0));
+            if (wait > 0) {
+                err.textContent = 'Please wait ' + Math.ceil(wait / 1000) +
+                    ' seconds before sending another note.';
+                return
+            }
+            const btn = $('#gs');
+            btn.disabled = true;
+            err.textContent = 'Sending...';
+            try {
+                const r = await fetch(SB_URL + '/rest/v1/guestbook', {
+                    method: 'POST',
+                    headers: {
+                        ...hdr(),
+                        Prefer: 'return=minimal'
+                    },
+                    body: JSON.stringify({
+                        name: name.slice(0, 24),
+                        message: message.slice(0, 140)
+                    })
+                });
+                if (!r.ok) throw new Error(r.status);
+                store.set('gbLast', Date.now());
+                $('#gm').value = '';
+                err.textContent = 'Thank you, your note is on the wall.';
+                drawG();
+            } catch (e) {
+                err.textContent = 'Your note could not be sent. Please try again.'
+            }
+            btn.disabled = false;
+        };
+        drawG();
+        let v = store.get('visits', 0) + 1;
+        store.set('visits', v);
+        $('#cnt').textContent = String(v).padStart(6, '0');
+
+        
+        const REACTIONS = ['👍', '🔥', '🫩', '🎉'];
+        async function drawReacts() {
+            let rows = [];
+            try {
+                const r = await fetch(SB_URL + '/rest/v1/reactions?select=post_id,emoji&limit=5000', {
+                    headers: hdr()
+                });
+                if (r.ok) rows = await r.json()
+            } catch (e) {}
+            const mine = store.get('myReacts', {});
+            $$('.reacts').forEach(box => {
+                const id = box.dataset.post;
+                box.innerHTML = REACTIONS.map(e => {
+                    const n = rows.filter(x => x.post_id === id && x.emoji === e).length;
+                    return `<button class="react${mine[id + e] ? ' on' : ''}" data-e="${e}">${e}<b>${n || ''}</b></button>`
+                }).join('');
+                box.onclick = async ev => {
+                    const b = ev.target.closest('.react');
+                    if (!b) return;
+                    const e = b.dataset.e,
+                        k = id + e;
+                    if (mine[k]) return;
+                    mine[k] = 1;
+                    store.set('myReacts', mine);
+                    b.classList.add('on');
+                    const c = b.querySelector('b');
+                    c.textContent = (+c.textContent || 0) + 1;
+                    try {
+                        await fetch(SB_URL + '/rest/v1/reactions', {
+                            method: 'POST',
+                            headers: {
+                                ...hdr(),
+                                Prefer: 'return=minimal'
+                            },
+                            body: JSON.stringify({
+                                post_id: id,
+                                emoji: e
+                            })
+                        })
+                    } catch (_) {}
+                };
+            });
+        }
+        drawReacts();
+
+        
+        const COFFEES = [{
+                name: 'Cappuccino',
+                img: 'capuccino-removebg-preview.png'
+            },
+            {
+                name: 'Pumpkin spice latte',
+                img: 'pump.png'
+            },
+            {
+                name: 'Boba tea',
+                img: 'boba.png'
+            },
+            {
+                name: 'Hot chocolate',
+                img: 'hotchoco-removebg-preview.png'
+            },
+            {
+                name: 'Arizona green tea',
+                img: 'arizona-removebg-preview.png'
+            }
+        ];
+        let ci = 0;
+        const showC = () => {
+            const c = COFFEES[ci];
+            $('#cimg').src = c.img;
+            $('#cname').textContent = c.name
+        };
+        $('#cimg').onerror = function () {
+            this.removeAttribute('src')
+        };
+        $('#cprev').onclick = () => {
+            ci = (ci + COFFEES.length - 1) % COFFEES.length;
+            showC()
+        };
+        $('#cnext').onclick = () => {
+            ci = (ci + 1) % COFFEES.length;
+            showC()
+        };
+        showC();
+        $('#cs').onclick = async () => {
+            const err = $('#cerr'),
+                wait = 30000 - (Date.now() - store.get('cLast', 0));
+            if (wait > 0) {
+                err.textContent = 'please wait ' + Math.ceil(wait / 1000) +
+                    ' seconds before sending another coffee.';
+                return
+            }
+            const btn = $('#cs'),
+                coffee = COFFEES[ci].name;
+            btn.disabled = true;
+            err.textContent = 'sending...';
+            try {
+                const r = await fetch(SB_URL + '/rest/v1/coffees', {
+                    method: 'POST',
+                    headers: {
+                        ...hdr(),
+                        Prefer: 'return=minimal'
+                    },
+                    body: JSON.stringify({
+                        coffee,
+                        sender: 'anonymous'
+                    })
+                });
+                if (!r.ok) throw new Error(r.status);
+                store.set('cLast', Date.now());
+                err.textContent = 'thanks! one ' + coffee.toLowerCase() + ' is on its way.'
+            } catch (e) {
+                err.textContent = 'could not send. please try again.'
+            }
+            btn.disabled = false;
+        };
+    </script>
+</body>
+
+</html>
