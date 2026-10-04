@@ -62,11 +62,11 @@
             background: var(--dark) url('background.gif') center/cover no-repeat
         }
 
-        @media(prefers-reduced-motion:reduce) {
+        /*@media(prefers-reduced-motion:reduce) {
             .bg {
                 background-image: none
             }
-        }
+        }*/
 
         h1,
         h2,
@@ -310,6 +310,43 @@
 
         .post {
             cursor: pointer
+        }
+
+        .updates-scroll {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 12px;
+            gap: 10px;
+            height: 430px
+        }
+
+        .updates-list {
+            min-height: 0;
+            overflow-y: auto;
+            padding-right: 10px;
+            scrollbar-width: none
+        }
+
+        .updates-list::-webkit-scrollbar {
+            display: none
+        }
+
+        .updates-track {
+            position: relative;
+            border-left: 2px solid #0A3323;
+            background: #0A3323;
+            cursor: pointer;
+            touch-action: none
+        }
+
+        .updates-thumb {
+            position: absolute;
+            top: 0;
+            left: 2px;
+            width: 8px;
+            min-height: 36px;
+            border-radius: 4px;
+            background: #D3968C;
+            pointer-events: none
         }
 
         .post h3 {
@@ -676,6 +713,8 @@
         </div>
 
         <h2 class="sec" id="blog">Updates</h2>
+        <div class="updates-scroll">
+        <div class="updates-list" id="updates-list" role="region" aria-labelledby="blog" tabindex="0">
         <div class="card post open">
             <h3>Blah blah blah<span class="arrow">&#9662;</span></h3><small>02 Oct 2026</small>
             <div class="body">
@@ -700,6 +739,11 @@
                 </p>
             </div>
             <div class="reacts" data-post="why-70khz"></div>
+        </div>
+        </div>
+        <div class="updates-track" id="updates-track" aria-hidden="true">
+            <div class="updates-thumb" id="updates-thumb"></div>
+        </div>
         </div>
         <!--<div class="card post">
             <h3>Crystal shelf update <span class="arrow">&#9662;</span></h3><small>14 Sep 2026 &middot; mood:
@@ -791,6 +835,46 @@
         $$('.post').forEach(p => p.addEventListener('click', e => {
             if (e.target.closest('.reacts')) return;
             p.classList.toggle('open')}));
+
+        const updatesList = $('#updates-list');
+        const updatesTrack = $('#updates-track');
+        const updatesThumb = $('#updates-thumb');
+        const updatesObserver = new ResizeObserver(() => updateScrollbar());
+        const updateScrollbar = () => {
+            const maxScroll = updatesList.scrollHeight - updatesList.clientHeight;
+            const trackHeight = updatesTrack.clientHeight;
+            const thumbHeight = Math.min(trackHeight, Math.max(36, trackHeight * updatesList.clientHeight / updatesList.scrollHeight));
+            const thumbTravel = trackHeight - thumbHeight;
+            updatesThumb.style.height = `${thumbHeight}px`;
+            updatesThumb.style.transform = `translateY(${maxScroll > 0 ? updatesList.scrollTop / maxScroll * thumbTravel : 0}px)`;
+        };
+        updatesList.querySelectorAll('.post').forEach(post => updatesObserver.observe(post));
+        updatesList.addEventListener('scroll', updateScrollbar);
+        updatesList.addEventListener('transitionend', updateScrollbar);
+        window.addEventListener('resize', updateScrollbar);
+        updatesTrack.addEventListener('pointerdown', e => {
+            const trackBounds = updatesTrack.getBoundingClientRect();
+            const thumbHeight = updatesThumb.getBoundingClientRect().height;
+            const thumbTravel = trackBounds.height - thumbHeight;
+            const maxScroll = updatesList.scrollHeight - updatesList.clientHeight;
+            const thumbBounds = updatesThumb.getBoundingClientRect();
+            const onThumb = e.clientY >= thumbBounds.top && e.clientY <= thumbBounds.bottom;
+            const startOffset = onThumb ? e.clientY - thumbBounds.top : thumbHeight / 2;
+            updatesList.scrollTop = Math.max(0, Math.min(thumbTravel, e.clientY - trackBounds.top - startOffset)) / thumbTravel * maxScroll;
+            updatesTrack.dataset.dragY = e.clientY;
+            updatesTrack.dataset.dragScroll = updatesList.scrollTop;
+            updatesTrack.setPointerCapture(e.pointerId);
+        });
+        updatesTrack.addEventListener('pointermove', e => {
+            if (!updatesTrack.hasPointerCapture(e.pointerId)) return;
+            const maxScroll = updatesList.scrollHeight - updatesList.clientHeight;
+            const thumbTravel = updatesTrack.clientHeight - updatesThumb.clientHeight;
+            if (thumbTravel > 0) {
+                updatesList.scrollTop = Number(updatesTrack.dataset.dragScroll) +
+                    (e.clientY - Number(updatesTrack.dataset.dragY)) / thumbTravel * maxScroll;
+            }
+        });
+        updateScrollbar();
 
         const A = ["You are exactly where you need to be.", "Slow down.",
             "Your energy is a gift, spend it gently.", "Today, choose peace over being perfect.",
